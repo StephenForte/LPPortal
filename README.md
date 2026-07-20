@@ -1,98 +1,110 @@
-# vinext-starter
+# LP Portal
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+An open-source LP portal being built for **emerging venture fund managers and angel investors**. The goal is a focused, affordable alternative to platforms designed for much larger funds: a clean investor experience for LPs and a practical operating workspace for GPs.
 
-## Prerequisites
+> **Project status: Phase 2 prototype.** The core product and CRM-assisted update workflows are being built and tested, but this is not yet ready for a GP to download and use with live fund or investor data.
 
-- Node.js `>=22.13.0`
+## The product we are building
 
-## Quick Start
+### For LPs
+
+- A clear view of committed, called, outstanding, and distributed capital
+- Estimated portfolio value and position-level look-through
+- Consolidated and per-fund views for LPs invested across multiple funds
+- Quarterly update archive
+- Passwordless access
+
+LP estimated value is computed from the LP's fund ownership and the fund's current company marks. It is not stored as a separate value for each LP. Updating a company mark once can therefore flow through to every affected investor view.
+
+### For GPs
+
+- Administration for funds, LPs, portfolio companies, positions, and team members
+- A quarterly update composer with preview and publishing workflows
+- Pipedrive context attached to portfolio company records
+- AI-assisted update drafting governed by an editable writing style
+- System and integration health views
+
+AI-generated copy is intended to remain an editable draft. It is never meant to publish automatically or replace GP review.
+
+## Progress
+
+| Phase | Scope | Status |
+|---|---|---|
+| **P1** | Core LP experience and GP administration | Prototype complete |
+| **P2** | Pipedrive workflows and AI-assisted quarterly update drafting | In progress |
+| **P3** | Automated news scanning, GP approval queue, LP news feed, and audit log | Planned |
+| **Release** | Production hardening, setup documentation, security review, and a supported GP deployment path | Planned |
+
+The current repository includes the P1 product surface and active P2 work, including Pipedrive connection and sync flows, AI drafting endpoints, a configurable writing-style interface, and integration monitoring. Some screens and records still use demonstration data, and the end-to-end production workflows have not yet been completed or validated with a live fund.
+
+## Can a GP download and use it today?
+
+Not yet—not for real fund operations.
+
+Developers can clone and run the prototype locally to evaluate the product direction. A GP-ready release will require, at minimum:
+
+- Persistent, production-tested data flows throughout the application
+- Complete authentication, authorization, and tenant/data-isolation verification
+- Reliable email delivery and publish/retry behavior
+- Finished migrations, seed/onboarding tools, and environment documentation
+- Integration failure handling, rate limits, and operational monitoring
+- Backup and recovery guidance
+- Security and privacy review for sensitive investor and fund data
+- A documented, repeatable deployment process
+
+When those items are complete, the intended experience is that a GP can clone or download the project, connect the required services, create an initial admin and fund, import or enter portfolio data, and deploy their own instance. Until then, use only synthetic or non-sensitive test data.
+
+## Run the prototype locally
+
+### Prerequisites
+
+- Node.js 22.13 or newer
+- npm
 
 ```bash
+git clone <repository-url>
+cd LPPortal
 npm install
 npm run dev
+```
+
+Then open the local URL printed by the development server.
+
+Useful checks:
+
+```bash
+npm test
+npm run lint
 npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+The prototype uses Vinext/Next.js, React, TypeScript, Drizzle, and Cloudflare-compatible bindings. Exact production environment variables and deployment instructions will be documented before the first GP-ready release.
 
-## Included Shape
+## Intended operating model and cost
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+The project is designed to be self-hosted on modest infrastructure without per-seat software fees. Final hosting requirements and a reference monthly cost will be published after the persistence, email, AI, CRM, and scheduled-job architecture has been validated in production-like testing.
 
-## Workspace Auth Headers
+Operators will be responsible for their own infrastructure and third-party service accounts, including any email, CRM, and AI usage.
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+## Scope
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+LP Portal is deliberately aimed at small funds. It is not a fund-accounting system and currently does not attempt to provide:
 
-Treat the full name as optional and fall back to email when it is absent:
+- Capital-call issuance or wire tracking
+- A full transaction ledger
+- Waterfall, carry, or management-fee calculations
+- Audit-grade reporting
+- Multi-currency conversion
+- A document vault, e-signature, or LP messaging system
 
-```tsx
-import { headers } from "next/headers";
+Capital account figures are GP-maintained balances, and SAFEs without share counts are supported by modeling the fund's mark and the LP's ownership of the fund.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Roadmap to a GP-ready release
 
-  const displayName = fullName ?? email;
-  // ...
-}
-```
+The near-term priority is completing P2, replacing remaining demonstration behavior with persisted end-to-end workflows, and validating the quarterly update process. P3 automation follows after the core product is dependable. Packaging, onboarding, documentation, and production hardening will then turn the prototype into something a GP can responsibly download and operate.
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+See [the product requirements](tasks/prd-lp-portal.md) for the detailed scope and acceptance criteria.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+## License
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+A distribution license has not yet been added. The intended open-source license and final reuse terms will be established before the first downloadable GP-ready release.
