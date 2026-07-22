@@ -1,6 +1,10 @@
+import { getChatGPTUser } from "../../../chatgpt-auth";
 import { askAnthropic } from "../../../../lib/integrations";
 
 export async function POST(request: Request) {
+  const user = await getChatGPTUser();
+  if (!user) return Response.json({ error: "Authentication required" }, { status: 401 });
+
   try {
     const { company, context, styleGuide } = await request.json() as { company?: string; context?: string; styleGuide?: string };
     if (!company || !context) return Response.json({ error: "Company and context are required" }, { status: 400 });
