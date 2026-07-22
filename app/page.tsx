@@ -120,14 +120,26 @@ function Admin() {
   </section></main>;
 }
 
+type CompanyRecord = { orgId: string; dealId: string; linked: boolean; activities: number; notes: number; deals: number; lastSynced: string };
+
+const companyRecords: Record<string, CompanyRecord> = {
+  Aperture: { orgId: "10239481", dealId: "7734", linked: true, activities: 12, notes: 4, deals: 1, lastSynced: "July 14 at 6:02 AM" },
+  Canopy: { orgId: "12483917", dealId: "8421", linked: true, activities: 18, notes: 6, deals: 1, lastSynced: "July 14 at 6:02 AM" },
+  "Kite Health": { orgId: "11029273", dealId: "5310", linked: true, activities: 9, notes: 3, deals: 1, lastSynced: "May 15 at 9:40 AM" },
+  Relay: { orgId: "", dealId: "", linked: false, activities: 0, notes: 0, deals: 0, lastSynced: "" },
+};
+
 function Companies() {
   const [selected, setSelected] = useState("Canopy");
-  const [orgId, setOrgId] = useState("12483917");
-  const [dealId, setDealId] = useState("8421");
-  const [status, setStatus] = useState<"idle" | "testing" | "connected" | "syncing" | "synced">("connected");
+  const [orgId, setOrgId] = useState(companyRecords.Canopy.orgId);
+  const [dealId, setDealId] = useState(companyRecords.Canopy.dealId);
+  const [status, setStatus] = useState<"idle" | "testing" | "connected" | "syncing" | "synced">(companyRecords.Canopy.linked ? "connected" : "idle");
+  const record = companyRecords[selected];
+  const select = (name: string) => { setSelected(name); const next = companyRecords[name]; setOrgId(next.orgId); setDealId(next.dealId); setStatus(next.linked ? "connected" : "idle"); };
   const test = () => { setStatus("testing"); setTimeout(() => setStatus("connected"), 750); };
   const sync = () => { setStatus("syncing"); setTimeout(() => setStatus("synced"), 950); };
-  return <><div className="admin-title"><div><p className="eyebrow">Portfolio data</p><h1>Companies</h1><p>Link portfolio companies to their CRM records.</p></div><button className="primary small">+ Add company</button></div><div className="company-workspace"><section className="company-list"><div className="table-toolbar"><h2>11 companies</h2></div>{["Aperture", "Canopy", "Kite Health", "Relay"].map((name, i) => <button className={selected === name ? "selected" : ""} onClick={() => setSelected(name)} key={name}><span className="company"><i>{name.split(" ").map(x => x[0]).join("")}</i><span><b>{name}</b><small>{i === 3 ? "Not linked" : "Pipedrive connected"}</small></span></span><span>›</span></button>)}</section><section className="company-detail"><div className="detail-heading"><div><p className="eyebrow">Company record</p><h2>{selected}</h2></div><span className="connection-badge"><i /> Connected</span></div><div className="form-grid"><label>Pipedrive organization ID<input value={orgId} onChange={e => setOrgId(e.target.value)} /></label><label>Pipedrive deal ID<input value={dealId} onChange={e => setDealId(e.target.value)} /></label></div><div className="integration-actions"><button onClick={test}>{status === "testing" ? "Checking…" : "Test connection"}</button><button className="primary small" onClick={sync}>{status === "syncing" ? "Syncing…" : status === "synced" ? "Synced ✓" : "Sync now"}</button></div><div className="last-sync"><span className="sync-icon">↻</span><div><b>{status === "synced" ? "Synced just now" : "Last synced July 14 at 6:02 AM"}</b><p>18 activities · 6 notes · 1 active deal</p></div></div><p className="secret-note">The Pipedrive API token is managed securely in the deployment environment and is never shown here.</p></section></div></>;
+  const connected = status === "connected" || status === "syncing" || status === "synced" || status === "testing";
+  return <><div className="admin-title"><div><p className="eyebrow">Portfolio data</p><h1>Companies</h1><p>Link portfolio companies to their CRM records.</p></div><button className="primary small">+ Add company</button></div><div className="company-workspace"><section className="company-list"><div className="table-toolbar"><h2>11 companies</h2></div>{Object.keys(companyRecords).map(name => <button className={selected === name ? "selected" : ""} onClick={() => select(name)} key={name}><span className="company"><i>{name.split(" ").map(x => x[0]).join("")}</i><span><b>{name}</b><small>{companyRecords[name].linked ? "Pipedrive connected" : "Not linked"}</small></span></span><span>›</span></button>)}</section><section className="company-detail"><div className="detail-heading"><div><p className="eyebrow">Company record</p><h2>{selected}</h2></div><span className={connected ? "connection-badge" : "connection-badge muted"}><i /> {connected ? "Connected" : "Not linked"}</span></div><div className="form-grid"><label>Pipedrive organization ID<input value={orgId} onChange={e => setOrgId(e.target.value)} /></label><label>Pipedrive deal ID<input value={dealId} onChange={e => setDealId(e.target.value)} /></label></div><div className="integration-actions"><button onClick={test}>{status === "testing" ? "Checking…" : "Test connection"}</button><button className="primary small" onClick={sync}>{status === "syncing" ? "Syncing…" : status === "synced" ? "Synced ✓" : "Sync now"}</button></div><div className="last-sync"><span className="sync-icon">↻</span><div><b>{status === "synced" ? "Synced just now" : record.linked ? `Last synced ${record.lastSynced}` : "Not yet synced"}</b><p>{status === "synced" || record.linked ? `${record.activities} activities · ${record.notes} notes · ${record.deals} active deal${record.deals === 1 ? "" : "s"}` : "Link a Pipedrive organization or deal to sync data"}</p></div></div><p className="secret-note">The Pipedrive API token is managed securely in the deployment environment and is never shown here.</p></section></div></>;
 }
 
 function Settings() {
