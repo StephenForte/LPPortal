@@ -14,16 +14,12 @@ export async function pullPipedrive(orgId?: string | null, dealId?: string | nul
   if (!orgId && !dealId) throw new Error("No Pipedrive record is linked");
   const base = "https://api.pipedrive.com/v1";
   const token = encodeURIComponent(runtime.PIPEDRIVE_API_TOKEN);
-  const requests: Promise<unknown>[] = [];
-  if (orgId) {
-    requests.push(jsonFetch(`${base}/organizations/${encodeURIComponent(orgId)}?api_token=${token}`));
-    requests.push(jsonFetch(`${base}/organizations/${encodeURIComponent(orgId)}/activities?api_token=${token}`));
-  }
-  if (dealId) {
-    requests.push(jsonFetch(`${base}/deals/${encodeURIComponent(dealId)}?api_token=${token}`));
-    requests.push(jsonFetch(`${base}/notes?deal_id=${encodeURIComponent(dealId)}&api_token=${token}`));
-  }
-  const [organization, activities, deal, notes] = await Promise.all(requests);
+  const [organization, activities, deal, notes] = await Promise.all([
+    orgId ? jsonFetch(`${base}/organizations/${encodeURIComponent(orgId)}?api_token=${token}`) : Promise.resolve(undefined),
+    orgId ? jsonFetch(`${base}/organizations/${encodeURIComponent(orgId)}/activities?api_token=${token}`) : Promise.resolve(undefined),
+    dealId ? jsonFetch(`${base}/deals/${encodeURIComponent(dealId)}?api_token=${token}`) : Promise.resolve(undefined),
+    dealId ? jsonFetch(`${base}/notes?deal_id=${encodeURIComponent(dealId)}&api_token=${token}`) : Promise.resolve(undefined),
+  ]);
   return { organization, activities, deal, notes };
 }
 
