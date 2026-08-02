@@ -59,7 +59,7 @@ export default function Home() {
       {view === "dashboard" && <Dashboard fund={fund} setFund={setFund} expanded={expanded} setExpanded={setExpanded} />}
       {view === "updates" && <Updates />}
       {view === "admin" && <Admin />}
-      <footer><span>Northstar Ventures</span><span>Private & confidential · Last updated July 18, 2026</span></footer>
+      <footer><span>Northstar Ventures</span><span>Private &amp; confidential · Last updated July 18, 2026</span></footer>
     </div>
   );
 }
